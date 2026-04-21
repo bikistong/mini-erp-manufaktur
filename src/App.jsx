@@ -27,7 +27,7 @@ const ICONS = {
 const NAV_GROUPS = [
   { id:"laporan",   label:"Laporan",           icon:"trendingup", tabs:[{id:"Dashboard",label:"Dashboard",icon:"home"},{id:"Buku Besar",label:"Buku Besar",icon:"book"},{id:"Laporan",label:"Laporan",icon:"barchart"},{id:"Invoice",label:"Invoice",icon:"printer"}] },
   { id:"transaksi", label:"Transaksi",          icon:"layers",     tabs:[{id:"Piutang",label:"Piutang",icon:"card"},{id:"Hutang",label:"Hutang",icon:"filetext"},{id:"Jurnal",label:"Jurnal",icon:"clipboard"}] },
-  { id:"master",    label:"Master & Pengaturan",icon:"settings",   tabs:[{id:"Inventory",label:"Inventory",icon:"box"},{id:"Master",label:"Master Data",icon:"users"},{id:"COA",label:"Chart of Accounts",icon:"list"}] },
+  { id:"master",    label:"Pengaturan",         icon:"settings",   tabs:[{id:"Inventory",label:"Inventory",icon:"box"},{id:"Master",label:"Master Data",icon:"users"},{id:"COA",label:"Chart of Accounts",icon:"list"}] },
 ];
 
 // ─── SIDEBAR ─────────────────────────────────────────────────
@@ -39,7 +39,7 @@ function Sidebar({ tab, setTab, company, isOpen, onClose, user }) {
   return (
     <>
       {isOpen && <div className="fixed inset-0 bg-black bg-opacity-40 z-40 md:hidden" onClick={onClose}/>}
-      <aside className={`fixed top-0 left-0 h-full bg-gray-900 text-white z-50 flex flex-col transition-all duration-300 flex-shrink-0 ${isOpen?"w-56":"w-0 md:w-14"} md:relative overflow-hidden`}>
+      <aside className={`sticky top-0 h-screen bg-gray-900 text-white z-50 flex flex-col transition-all duration-300 flex-shrink-0 ${isOpen?"w-56":"w-0 md:w-14"} overflow-hidden`}>
 
         {/* Logo */}
         <div className="flex items-center gap-3 px-3 py-4 border-b border-gray-700/60 min-h-[56px]">
@@ -807,13 +807,13 @@ export default function App() {
   const currentGroup=NAV_GROUPS.find(g=>g.tabs.some(t=>t.id===tab));
 
   return (
-    <div className="min-h-screen bg-gray-100 font-sans flex overflow-hidden">
+    <div className="h-screen bg-gray-100 font-sans flex overflow-hidden">
       {csvModal&&<CSVOutputModal data={csvModal} onClose={()=>setCSVModal(null)}/>}
 
       <Sidebar tab={tab} setTab={setTab} company={company} isOpen={sidebarOpen} onClose={()=>setSidebarOpen(false)}/>
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <div className="bg-white border-b px-4 py-3 flex items-center gap-3 sticky top-0 z-30">
+        <div className="bg-white border-b px-4 py-3 flex items-center gap-3 sticky top-0 z-30 flex-shrink-0">
           <button onClick={()=>setSidebarOpen(o=>!o)} className="text-gray-500 hover:text-gray-800 p-1 rounded-lg hover:bg-gray-100 flex-shrink-0">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           </button>
@@ -829,7 +829,8 @@ export default function App() {
           <div className="text-xs text-gray-400 hidden sm:block">{today()}</div>
         </div>
 
-        <div className="flex-1 p-4 max-w-3xl w-full mx-auto overflow-y-auto">
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-4 max-w-3xl w-full mx-auto">
           {tab==="Dashboard"&&<Dashboard labaRugi={labaRugi} totalAset={totalAset} totalPiutang={totalPiutang} totalHutang={totalHutang} lowStock={lowStock} ar={ar} ap={ap}/>}
           {tab==="Jurnal"&&<Jurnal journals={journals} setJournals={setJournals} accounts={accounts}/>}
           {tab==="Buku Besar"&&<BukuBesar accounts={accounts} journals={journals} getBalance={getBalance}/>}
@@ -840,6 +841,7 @@ export default function App() {
           {tab==="COA"&&<COA accounts={accounts} setAccounts={setAccounts}/>}
           {tab==="Invoice"&&<InvoiceModule ar={ar} templates={templates} setTemplates={setTemplates} company={company} setCompany={setCompany} printTarget={printTarget}/>}
           {tab==="Master"&&<MasterData customers={customers} setCustomers={setCustomers} suppliers={suppliers} setSuppliers={setSuppliers}/>}
+        </div>
         </div>
       </div>
     </div>
