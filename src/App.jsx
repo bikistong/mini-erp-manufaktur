@@ -1292,12 +1292,11 @@ export default function App() {
 
   useEffect(() => { if(user) loadAll(); }, [user, loadAll]);
 
-  // Auto-refresh 30 detik
+  // Refresh saat pindah tab
   useEffect(() => {
     if (!user) return;
-    const t = setInterval(() => { if(!syncing) loadAll(); }, 30000);
-    return () => clearInterval(t);
-  }, [user, syncing, loadAll]);
+    loadAll();
+  }, [tab]); // eslint-disable-line
 
   // Helper: wrap dengan syncing indicator
   const sync = async (fn) => { setSyncing(true); try{ await fn(); }finally{ setSyncing(false); } };
