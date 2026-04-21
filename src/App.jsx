@@ -1272,8 +1272,10 @@ export default function App() {
   const [company,   setCompany]   = useState({nama:"",alamat:"",telp:"",email:"",npwp:""});
 
   // Load data dari Sheets
-  const loadAll = useCallback(async () => {
-    setLoading(true); setError(null);
+  const loadAll = useCallback(async (isInitial = false) => {
+    if (isInitial) setLoading(true);
+    setSyncing(!isInitial);
+    setError(null);
     try {
       const [acc,jrn,arData,apData,inv,cust,supp,comp] = await Promise.all([
         API.getAll("accounts"), API.getAll("journals"),
@@ -1286,17 +1288,49 @@ export default function App() {
       setInventory(inv||[]); setCustomers(cust||[]);
       setSuppliers(supp||[]);
       if(comp) setCompany(comp);
-    } catch(e){ setError("Gagal load data: "+e.message); }
-    finally { setLoading(false); }
-  }, []);
+      // Simpan ke cache localStorage
+      localStorage.setItem("erp_cache", JSON.stringify({
+        accounts:acc||[], journals:jrn||[], ar:arData||[], ap:apData||[],
+        inventory:inv||[], customers:cust||[], suppliers:supp||[], company:comp
+      }));
+    } catch(e){
+      // Fallback ke cache kalau gagal
+      const cached = localStorage.getItem("erp_cache");
+      if (cached && isInitial) {
+        const c = JSON.parse(cached);
+        setAccounts(c.accounts||[]); setJournals(c.journals||[]);
+        setAr(c.ar||[]);             setAp(c.ap||[]);
+        setInventory(c.inventory||[]); setCustomers(c.customers||[]);
+        setSuppliers(c.suppliers||[]);
+        if(c.company) setCompany(c.company);
+        addToast("Mode offline: menampilkan data terakhir", "info");
+      } else {
+        setError("Gagal load data: "+e.message);
+      }
+    } finally {
+      setLoading(false);
+      setSyncing(false);
+    }
+  }, []); // eslint-disable-line
 
-  useEffect(() => { if(user) loadAll(); }, [user, loadAll]);
-
-  // Refresh saat pindah tab
+  // Load awal saat login — pakai cache dulu kalau ada, update di background
   useEffect(() => {
     if (!user) return;
-    loadAll();
-  }, [tab]); // eslint-disable-line
+    const cached = localStorage.getItem("erp_cache");
+    if (cached) {
+      try {
+        const c = JSON.parse(cached);
+        setAccounts(c.accounts||[]); setJournals(c.journals||[]);
+        setAr(c.ar||[]);             setAp(c.ap||[]);
+        setInventory(c.inventory||[]); setCustomers(c.customers||[]);
+        setSuppliers(c.suppliers||[]);
+        if(c.company) setCompany(c.company);
+        loadAll(false); // update background, tanpa loading screen
+      } catch { loadAll(true); }
+    } else {
+      loadAll(true); // pertama kali login, tampilkan loading screen
+    }
+  }, [user, loadAll]);
 
   // Helper: wrap dengan syncing indicator
   const sync = async (fn) => { setSyncing(true); try{ await fn(); }finally{ setSyncing(false); } };
